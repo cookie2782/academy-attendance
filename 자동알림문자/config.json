@@ -1,9 +1,0 @@
-{
-  "academy_name": "그레이스 미술",
-  "check_interval": 5,
-  "name_column": "A",
-  "phone_column": "B",
-  "status_column": "C",
-  "payment_column": "D",
-  "start_row": 2
-}
