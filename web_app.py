@@ -15,8 +15,31 @@ app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 
 # 설정 파일 경로
-EXCEL_FILE = '202511_자동알림.xlsx'
-CONFIG_FILE = 'config.json'
+EXCEL_FILE = os.getenv('EXCEL_FILE', '202511_자동알림.xlsx')
+CONFIG_FILE = os.getenv('CONFIG_FILE', 'config.json')
+SMS_CONFIG_FILE = os.getenv('SMS_CONFIG_FILE', 'sms_config.json')
+
+def init_excel_file():
+    """Excel 파일이 없으면 생성"""
+    if not os.path.exists(EXCEL_FILE):
+        print(f"Excel 파일이 없습니다. 새로 생성합니다: {EXCEL_FILE}")
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        
+        # 헤더 생성
+        ws['A1'] = '이름'
+        ws['B1'] = '연락처'
+        ws['C1'] = '상태'
+        ws['D1'] = '납입일'
+        
+        # 샘플 데이터 (선택사항)
+        ws['A2'] = '홍길동'
+        ws['B2'] = '01012345678'
+        ws['C2'] = 0
+        ws['D2'] = ''
+        
+        wb.save(EXCEL_FILE)
+        print(f"Excel 파일 생성 완료: {EXCEL_FILE}")
 
 def load_config():
     """설정 파일 로드 (환경 변수 우선)"""
@@ -116,6 +139,9 @@ def update_status(row, new_status):
     except Exception as e:
         print(f"상태 업데이트 오류: {e}")
         return False
+
+# 앱 시작 시 Excel 파일 초기화 (Gunicorn 실행 시에도 작동)
+init_excel_file()
 
 @app.route('/')
 def index():
@@ -417,6 +443,9 @@ def mobile():
                          academy_name=config.get('academy_name', 'OO학원'))
 
 if __name__ == '__main__':
+    # Excel 파일 초기화 (없으면 생성)
+    init_excel_file()
+    
     # Render 등 호스팅 서비스는 PORT 환경 변수를 제공
     port = int(os.getenv('PORT', 5000))
     
