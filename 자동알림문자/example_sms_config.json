@@ -1,0 +1,27 @@
+{
+    "provider": "coolsms",
+    "message_type": "sms",
+    "api_key": "YOUR_API_KEY_HERE",
+    "api_secret": "YOUR_API_SECRET_HERE",
+    "sender": "01012345678",
+    "aligo": {
+        "api_key": "YOUR_ALIGO_API_KEY",
+        "user_id": "YOUR_ALIGO_USER_ID",
+        "sender": "01012345678",
+        "template_code": ""
+    },
+    "naver": {
+        "service_id": "YOUR_NAVER_SERVICE_ID",
+        "access_key": "YOUR_NAVER_ACCESS_KEY",
+        "secret_key": "YOUR_NAVER_SECRET_KEY",
+        "sender": "01012345678",
+        "template_code": ""
+    },
+    "kakao": {
+        "rest_api_key": "YOUR_KAKAO_REST_API_KEY",
+        "sender_key": "YOUR_KAKAO_SENDER_KEY",
+        "template_code": "",
+        "phone": "01012345678"
+    }
+}
+

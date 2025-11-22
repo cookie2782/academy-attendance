@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>{{ academy_name }} - 모바일</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', -apple-system, sans-serif;
+            background: #f5f5f5;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .student-list {
+            padding: 15px;
+        }
+
+        .student-item {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .student-item:active {
+            transform: scale(0.98);
+        }
+
+        .student-item.checked-in {
+            border-left: 5px solid #4CAF50;
+            background: linear-gradient(to right, #e8f5e9, white);
+        }
+
+        .student-item.checked-out {
+            border-left: 5px solid #999;
+        }
+
+        .student-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .student-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-in {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .status-out {
+            background: #999;
+            color: white;
+        }
+
+        .student-phone {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn-mobile {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-mobile:active {
+            transform: scale(0.95);
+        }
+
+        .btn-checkin {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-checkout {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-mobile:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .floating-refresh {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            border: none;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        .floating-refresh:active {
+            transform: scale(0.9);
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            z-index: 100;
+        }
+
+        .nav-item {
+            text-align: center;
+            padding: 10px;
+            color: #666;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .nav-item.active {
+            color: #667eea;
+        }
+
+        .nav-icon {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .toast-mobile {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 2000;
+            display: none;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .toast-mobile.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateX(-50%) translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📚 {{ academy_name }}</h1>
+        <p>등원/하원 관리</p>
+    </div>
+
+    <div class="student-list" id="studentList">
+        {% if students %}
+            {% for student in students %}
+            <div class="student-item {% if student.status == 1 %}checked-in{% else %}checked-out{% endif %}">
+                <div class="student-header">
+                    <div class="student-name">{{ student.name }}</div>
+                    <div class="status-badge {% if student.status == 1 %}status-in{% else %}status-out{% endif %}">
+                        {% if student.status == 1 %}✓ 등원중{% else %}○ 하원{% endif %}
+                    </div>
+                </div>
+                <div class="student-phone">📱 {{ student.phone }}</div>
+                <div class="payment-status" style="margin: 10px 0; font-size: 13px;">
+                    <span style="padding: 4px 10px; border-radius: 12px; {% if student.payment_date %}background: #4CAF50; color: white;{% else %}background: #f44336; color: white;{% endif %}">
+                        💰 {{ student.payment_status }}
+                    </span>
+                    {% if student.payment_date %}
+                    <span style="color: #666; margin-left: 8px; font-size: 12px;">{{ student.payment_date }}</span>
+                    {% endif %}
+                </div>
+                <div class="action-buttons" style="grid-template-columns: 1fr 1fr 1fr;">
+                    <button class="btn-mobile btn-checkin" 
+                            onclick="checkin({{ student.row }}, '{{ student.name }}')"
+                            {% if student.status == 1 %}disabled{% endif %}>
+                        등원
+                    </button>
+                    <button class="btn-mobile btn-checkout" 
+                            onclick="checkout({{ student.row }}, '{{ student.name }}')"
+                            {% if student.status == 0 %}disabled{% endif %}>
+                        하원
+                    </button>
+                    <button class="btn-mobile" style="background: #FF9800; color: white;" 
+                            onclick="registerPayment({{ student.row }}, '{{ student.name }}')">
+                        납입
+                    </button>
+                </div>
+                <div class="action-buttons" style="grid-template-columns: 1fr 1fr 1fr; margin-top: 8px;">
+                    <button class="btn-mobile" style="background: #9C27B0; color: white; font-size: 13px; padding: 10px;" 
+                            onclick="sendMessage({{ student.row }}, '{{ student.name }}', 'checkin')">
+                        📨등원
+                    </button>
+                    <button class="btn-mobile" style="background: #673AB7; color: white; font-size: 13px; padding: 10px;" 
+                            onclick="sendMessage({{ student.row }}, '{{ student.name }}', 'checkout')">
+                        📨하원
+                    </button>
+                    <button class="btn-mobile" style="background: #E91E63; color: white; font-size: 13px; padding: 10px;" 
+                            onclick="sendMessage({{ student.row }}, '{{ student.name }}', 'payment_request')">
+                        📨납입
+                    </button>
+                </div>
+                <div class="action-buttons" style="grid-template-columns: 1fr 1fr; margin-top: 8px; border-top: 1px solid #eee; padding-top: 8px;">
+                    <button class="btn-mobile" style="background: #00BCD4; color: white; font-size: 12px; padding: 10px;" 
+                            onclick="editPhone({{ student.row }}, '{{ student.name }}', '{{ student.phone }}')">
+                        📞 연락처
+                    </button>
+                    <button class="btn-mobile" style="background: #F44336; color: white; font-size: 12px; padding: 10px;" 
+                            onclick="deleteStudent({{ student.row }}, '{{ student.name }}', '{{ student.phone }}', {{ student.status }})">
+                        🗑️ 삭제
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📋</div>
+                <p>등록된 학생이 없습니다</p>
+            </div>
+        {% endif %}
+        
+        <div style="padding: 20px; margin-top: 10px; padding-bottom: 80px;">
+            <button class="btn-mobile" style="background: #4CAF50; color: white; width: 100%; font-size: 16px; padding: 16px;" 
+                    onclick="addStudent()">
+                ➕ 신규 학생 등록
+            </button>
+        </div>
+    </div>
+
+    <button class="floating-refresh" onclick="refreshPage()">🔄</button>
+
+    <div class="bottom-nav">
+        <a href="/" class="nav-item active">
+            <span class="nav-icon">🏠</span>
+            홈
+        </a>
+        <a href="#" class="nav-item" onclick="refreshPage(); return false;">
+            <span class="nav-icon">🔄</span>
+            새로고침
+        </a>
+        <a href="#" class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            설정
+        </a>
+    </div>
+
+    <div class="toast-mobile" id="toast">
+        <div id="toastMessage"></div>
+    </div>
+
+    <script>
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        async function checkin(row, name) {
+            try {
+                const response = await fetch(`/api/checkin/${row}`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(`✓ ${name}님 등원 완료`);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showToast(`✗ ${data.message}`);
+                }
+            } catch (error) {
+                showToast('✗ 오류가 발생했습니다');
+            }
+        }
+
+        async function checkout(row, name) {
+            try {
+                const response = await fetch(`/api/checkout/${row}`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(`✓ ${name}님 하원 완료`);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showToast(`✗ ${data.message}`);
+                }
+            } catch (error) {
+                showToast('✗ 오류가 발생했습니다');
+            }
+        }
+
+        async function registerPayment(row, name) {
+            const paymentDate = prompt(`${name}님의 원비 납입일:\n(예: 2024-01-15)\n\n취소하려면 빈칸으로 확인`);
+            
+            if (paymentDate === null) return;
+            
+            try {
+                const response = await fetch(`/api/payment/${row}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        payment_date: paymentDate || null
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(`✓ ${data.message}`);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showToast(`✗ ${data.message}`);
+                }
+            } catch (error) {
+                showToast('✗ 오류가 발생했습니다');
+            }
+        }
+
+        async function sendMessage(row, name, type) {
+            let msgType = '';
+            let customMessage = '';
+            
+            if (type === 'checkin') {
+                msgType = '등원 알림';
+            } else if (type === 'checkout') {
+                msgType = '하원 알림';
+            } else if (type === 'payment_request') {
+                msgType = '납입 요청';
+                customMessage = prompt(`${name}님 납입 요청 메시지:\n(빈칸이면 기본 메시지)`);
+                if (customMessage === null) return;
+            }
+            
+            if (!confirm(`${name}님에게 ${msgType}을 발송하시겠습니까?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/send_message/${row}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: type,
+                        message: customMessage
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(`✓ ${data.message}`);
+                } else {
+                    showToast(`✗ ${data.message}`);
+                }
+            } catch (error) {
+                showToast('✗ 오류가 발생했습니다');
+            }
+        }
+
+        function refreshPage() {
+            location.reload();
+        }
+        
+        // 연락처 수정
+        async function editPhone(row, name, currentPhone) {
+            const newPhone = prompt(`${name}님의 새 연락처를 입력하세요:\n\n현재: ${currentPhone}\n형식: 010-1234-5678`, currentPhone);
+            
+            if (newPhone === null) return;  // 취소
+            
+            if (!newPhone.trim()) {
+                showToast('❌ 연락처를 입력해주세요');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/edit_phone/${row}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        phone: newPhone
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(`✓ ${data.message}`);
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(`✗ ${data.message}`);
+                }
+            } catch (error) {
+                showToast('✗ 연락처 수정 오류');
+            }
+        }
+        
+        // 학생 등록
+        async function addStudent() {
+            const name = prompt('학생 이름을 입력하세요:');
+            if (!name || !name.trim()) return;
+            
+            const phone = prompt(`${name}님의 연락처를 입력하세요:\n(예: 010-1234-5678)`);
+            if (!phone || !phone.trim()) {
+                showToast('❌ 연락처를 입력해주세요');
+                return;
+            }
+            
+            const paymentDate = prompt(`${name}님의 원비 납입일:\n(선택사항, 빈칸이면 미납)\n(예: 2024-01-15)`, '');
+            
+            try {
+                const response = await fetch('/api/add_student', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        phone: phone,
+                        payment_date: paymentDate
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(`✓ ${data.message}`);
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(`✗ ${data.message}`);
+                }
+            } catch (error) {
+                showToast('✗ 학생 등록 오류');
+            }
+        }
+        
+        // 학생 삭제
+        async function deleteStudent(row, name, phone, status) {
+            const statusText = status === 1 ? '등원중' : '하원';
+            const confirmDelete = confirm(
+                `${name}님을 삭제하시겠습니까?\n\n` +
+                `연락처: ${phone}\n` +
+                `상태: ${statusText}\n\n` +
+                `⚠️ 이 작업은 되돌릴 수 없습니다!`
+            );
+            
+            if (!confirmDelete) return;
+            
+            try {
+                const response = await fetch(`/api/delete_student/${row}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(`✓ ${data.message}`);
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(`✗ ${data.message}`);
+                }
+            } catch (error) {
+                showToast('✗ 학생 삭제 오류');
+            }
+        }
+
+        // Pull to refresh
+        let touchStartY = 0;
+        let touchEndY = 0;
+
+        document.addEventListener('touchstart', function(e) {
+            if (window.scrollY === 0) {
+                touchStartY = e.touches[0].clientY;
+            }
+        });
+
+        document.addEventListener('touchend', function(e) {
+            touchEndY = e.changedTouches[0].clientY;
+            if (touchEndY - touchStartY > 100) {
+                location.reload();
+            }
+        });
+    </script>
+</body>
+</html>
+
+
