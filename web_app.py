@@ -23,23 +23,27 @@ def init_excel_file():
     """Excel 파일이 없으면 생성"""
     if not os.path.exists(EXCEL_FILE):
         print(f"Excel 파일이 없습니다. 새로 생성합니다: {EXCEL_FILE}")
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        
-        # 헤더 생성
-        ws['A1'] = '이름'
-        ws['B1'] = '연락처'
-        ws['C1'] = '상태'
-        ws['D1'] = '납입일'
-        
-        # 샘플 데이터 (선택사항)
-        ws['A2'] = '홍길동'
-        ws['B2'] = '01012345678'
-        ws['C2'] = 0
-        ws['D2'] = ''
-        
-        wb.save(EXCEL_FILE)
-        print(f"Excel 파일 생성 완료: {EXCEL_FILE}")
+        try:
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            
+            # 헤더 생성
+            ws['A1'] = '이름'
+            ws['B1'] = '연락처'
+            ws['C1'] = '상태'
+            ws['D1'] = '납입일'
+            
+            # 샘플 데이터 (선택사항)
+            ws['A2'] = '홍길동'
+            ws['B2'] = '01012345678'
+            ws['C2'] = 0
+            ws['D2'] = ''
+            
+            wb.save(EXCEL_FILE)
+            print(f"Excel 파일 생성 완료: {EXCEL_FILE}")
+        except Exception as e:
+            print(f"Excel 파일 생성 실패 (읽기 전용 파일 시스템일 수 있음): {e}")
+            print("메모리 기반 모드로 전환합니다.")
 
 def load_config():
     """설정 파일 로드 (환경 변수 우선)"""
@@ -72,6 +76,11 @@ def load_config():
 def read_students():
     """학생 목록 읽기"""
     config = load_config()
+    
+    # Excel 파일이 없으면 빈 목록 반환
+    if not os.path.exists(EXCEL_FILE):
+        print(f"Excel 파일이 없습니다: {EXCEL_FILE}")
+        return []
     
     try:
         wb = openpyxl.load_workbook(EXCEL_FILE)
